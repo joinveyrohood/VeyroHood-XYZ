@@ -1,4 +1,5 @@
 name = "veyrohood-xyz-api"
+workers_dev = true
 main = "worker.js"
 compatibility_date = "2026-09-20"
 compatibility_flags = ["nodejs_compat"]
