@@ -70,14 +70,15 @@ async function check(tx){
   if(data.success){vhMarkVerified(); setTimeout(()=>location.href="dashboard.html",800);} 
 }
 document.getElementById("payBtn").onclick=async()=>{
-  const saved=await saveDetails();
-  if(saved&&saved.error) return;
+  if(!window.VH.wallet){status.textContent="Connect wallet first.";return;}
+  status.textContent="Opening wallet...";
   try{
-    const tx=await payUsdg(Number(document.getElementById("chain").value));
+    const tx=await payUsdg(11155111);
     document.getElementById("txHash").value=tx;
-    status.textContent="Payment sent. Checking...";
+    status.textContent="Wallet sent "+tx+". Saving...";
+    await saveDetails();
     await check(tx);
-  }catch(e){status.textContent=e.message||"Payment cancelled";}
+  }catch(e){status.textContent=e.message||"Wallet did not open. Switch MetaMask to Sepolia and try again.";}
 };
 document.getElementById("recheckBtn").onclick=()=>check(document.getElementById("txHash").value.trim());
 </script>
