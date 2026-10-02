@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VeyroHood XYZ — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="dashboard">
+<div class="wrap">
+<nav>
+  <a class="logo" href="index.html">VEYROHOOD<small>XYZ WHITELIST</small></a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="missions.html" data-gate="missions">Missions</a>
+    <a href="verify.html" data-gate="verify">Verify</a>
+    <a class="active" href="dashboard.html">Dashboard</a>
+    <a href="how.html">How</a>
+  </div>
+</nav>
+<section class="hero" style="grid-template-columns:1fr"><div><div class="kicker">YOUR FILE</div><h1>YOUR <i>HOOD FILE.</i></h1></div></section>
+<section class="panel">
+  <button class="btn" id="connectBtn" type="button">CONNECT WALLET</button>
+  <div id="walletPick" class="pick"></div>
+  <p id="status" class="muted">Connect the wallet you verified with.</p>
+</section>
+<section class="stats">
+  <div class="card stat">Tier<b id="tier">-</b></div>
+  <div class="card stat">Seat<b id="seat">-</b></div>
+  <div class="card stat">Referrals<b id="refs">0</b></div>
+  <div class="card stat">Available<b id="avail">$0.00</b></div>
+</section>
+<section class="grid2">
+  <div class="card"><h2>EARNED</h2><p>Lifetime <span id="earned">$0.00</span><br>Withdrawn <span id="withdrawn">$0.00</span><br>Each paid ref = $0.05</p></div>
+  <div class="card"><h2>YOUR LINK</h2><input id="refLink" class="copy-row" readonly value="Connect wallet"><div class="actions" style="margin-top:12px"><button class="btn" id="copyBtn" type="button" disabled>COPY LINK</button></div></div>
+</section>
+<section class="panel">
+  <h2>WITHDRAW</h2>
+  <p class="muted">Minimum $2. Extra balance withdraws with it. Auto-sends USDG to this wallet.</p>
+  <select id="claimChain"><option value="4663">Robinhood Chain</option><option value="1">Ethereum</option></select>
+  <div class="actions" style="margin-top:12px"><button class="btn" id="claimBtn" type="button" disabled>WITHDRAW</button></div>
+</section>
+<section class="panel"><h2>YOUR CLAIMS</h2><div id="claims" class="muted">No claims yet.</div></section>
+<footer><span>VeyroHood XYZ</span><span>Verified only</span></footer>
+</div>
+<script src="gate.js"></script>
+<script src="wallet.js"></script>
+<script>
+let lastLink="";
+function money(v){return "$"+Number(v||0).toFixed(2)}
+document.getElementById("connectBtn").onclick=()=>connectFlow("walletPick",(w)=>{document.getElementById("status").textContent=w; loadMe(); loadClaims();},m=>document.getElementById("status").textContent=m);
+async function loadMe(){
+  const data=await (await fetch(API_URL+"/api/me?wallet="+window.VH.wallet)).json();
+  if(!data.success){document.getElementById("status").textContent=data.error||"Not found";return;}
+  document.getElementById("tier").textContent=data.ogNumber?"OG":(data.paymentVerified?"WL":"UNPAID");
+  document.getElementById("seat").textContent=data.nftNumber||data.ogNumber||"-";
+  document.getElementById("refs").textContent=data.referredCount||0;
+  document.getElementById("avail").textContent=money(data.availableBalance);
+  document.getElementById("earned").textContent=money(data.totalEarned);
+  document.getElementById("withdrawn").textContent=money(data.totalWithdrawn);
+  lastLink=data.referralLink||"";
+  document.getElementById("refLink").value=lastLink||"No link yet";
+  document.getElementById("copyBtn").disabled=!lastLink;
+  document.getElementById("claimBtn").disabled=!data.canClaim;
+  document.getElementById("status").textContent=data.message||"";
+}
+async function loadClaims(){
+  const data=await (await fetch(API_URL+"/api/claims?wallet="+window.VH.wallet)).json();
+  const rows=data.claims||[];
+  document.getElementById("claims").innerHTML=rows.length?rows.map(c=>"#"+c.id+" · "+money(c.amount)+" · "+c.status+(c.payout_tx?" · "+c.payout_tx:"")).join("<br>"):"No claims yet.";
+}
+document.getElementById("copyBtn").onclick=async()=>{
+  const box=document.getElementById("refLink");
+  box.focus(); box.select();
+  let ok=false;
+  try{await navigator.clipboard.writeText(lastLink); ok=true;}catch(e){}
+  if(!ok){try{ok=document.execCommand("copy");}catch(e){}}
+  document.getElementById("status").textContent=ok?"Referral link copied.":"Selected. Press copy.";
+};
+document.getElementById("claimBtn").onclick=async()=>{
+  const data=await (await fetch(API_URL+"/api/claim",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({wallet:window.VH.wallet,chainId:Number(document.getElementById("claimChain").value)})})).json();
+  document.getElementById("status").textContent=data.error||data.message||"Submitted";
+  loadMe(); loadClaims();
+};
+</script>
+</body>
+</html>

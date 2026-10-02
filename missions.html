@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VeyroHood XYZ — Missions</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="missions">
+<div class="wrap">
+<nav>
+  <a class="logo" href="index.html">VEYROHOOD<small>XYZ WHITELIST</small></a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a class="active" href="missions.html">Missions</a>
+    <a href="verify.html" data-gate="verify">Verify</a>
+    <a href="dashboard.html" data-gate="dashboard">Dashboard</a>
+    <a href="how.html">How</a>
+  </div>
+</nav>
+<section class="hero" style="grid-template-columns:1fr">
+  <div>
+    <div class="kicker">ONE AT A TIME</div>
+    <h1>COMPLETE THIS. <i>NEXT OPENS.</i></h1>
+    <p class="lead">Follow X, join Discord, quote the pinned post, reply. Opening a tab is not enough.</p>
+  </div>
+</section>
+<section class="panel">
+  <div class="muted" style="display:flex;justify-content:space-between"><span>Completed</span><span id="progressText">0 / 4</span></div>
+  <div class="bar"><div class="fill" id="progressFill"></div></div>
+</section>
+<section class="panel">
+  <h2 id="stepTitle">01 / FOLLOW X</h2>
+  <p id="stepText"></p>
+  <div class="actions">
+    <a class="btn ghost" id="openTask" target="_blank" rel="noopener">OPEN</a>
+    <button class="btn" id="completeTask" type="button" disabled>COMPLETE</button>
+  </div>
+</section>
+<p class="warn" id="note">Finish the current mission.</p>
+<div class="actions"><a class="btn" id="goVerify" href="#">VERIFY $0.25 LOCKED</a></div>
+<footer><span>VeyroHood XYZ</span><span>Missions</span></footer>
+</div>
+<script src="gate.js"></script>
+<script>
+const STEPS=[
+  {key:"follow",title:"01 / FOLLOW X",text:"Follow @VeyroHood on X, then press Complete.",open:"OPEN X",href:"https://x.com/VeyroHood"},
+  {key:"discord",title:"02 / DISCORD",text:"Join Discord, then press Complete.",open:"OPEN DISCORD",href:"https://discord.gg/6CYd3ewU5"},
+  {key:"quote",title:"03 / QUOTE",text:"Quote the pinned post, then press Complete.",open:"OPEN QUOTE",href:"https://x.com/VeyroHood/status/2095434542094115048"},
+  {key:"reply",title:"04 / REPLY",text:"Reply on the pinned post, then press Complete.",open:"OPEN REPLY",href:"https://x.com/VeyroHood/status/2095434542094115048"}
+];
+const openTask=document.getElementById("openTask"), completeTask=document.getElementById("completeTask"), go=document.getElementById("goVerify"), note=document.getElementById("note");
+function current(){const c=vhClicks();return STEPS.find(s=>!c[s.key])||null}
+function render(){
+  const c=vhClicks(), o=vhOpened(), n=STEPS.filter(s=>c[s.key]).length, step=current();
+  document.getElementById("progressText").textContent=n+" / 4";
+  document.getElementById("progressFill").style.width=(n/4*100)+"%";
+  if(!step){
+    document.getElementById("stepTitle").textContent="ALL COMPLETE";
+    document.getElementById("stepText").textContent="Next: pay $0.25 USDG.";
+    openTask.style.display=completeTask.style.display="none";
+    go.href="verify.html"; go.textContent="VERIFY $0.25 USDG";
+    note.textContent="Missions done."; note.className="ok";
+  }else{
+    document.getElementById("stepTitle").textContent=step.title;
+    document.getElementById("stepText").textContent=step.text;
+    openTask.style.display=completeTask.style.display="";
+    openTask.href=step.href; openTask.textContent=o[step.key]?"OPENED":step.open;
+    completeTask.disabled=!o[step.key];
+    go.href="#"; go.textContent="VERIFY $0.25 LOCKED";
+    note.textContent="Next mission stays hidden until Complete."; note.className="warn";
+  }
+}
+openTask.onclick=()=>{const s=current(); if(s){vhMarkOpened(s.key); render();}};
+completeTask.onclick=()=>{const s=current(); if(!s||!vhOpened()[s.key]) return; vhMarkClick(s.key); render();};
+go.onclick=e=>{ if(!vhMissionsDone()){e.preventDefault();} };
+render();
+</script>
+</body>
+</html>

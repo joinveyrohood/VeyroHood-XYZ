@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VeyroHood XYZ — Verify</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="verify">
+<div class="wrap">
+<nav>
+  <a class="logo" href="index.html">VEYROHOOD<small>XYZ WHITELIST</small></a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="missions.html" data-gate="missions">Missions</a>
+    <a class="active" href="verify.html">Verify</a>
+    <a href="dashboard.html" data-gate="dashboard">Dashboard</a>
+    <a href="how.html">How</a>
+  </div>
+</nav>
+<section class="hero" style="grid-template-columns:1fr">
+  <div>
+    <div class="kicker">$0.25 USDG</div>
+    <h1>LOCK YOUR <i>SEAT.</i></h1>
+    <p class="lead">X username, Discord, quote link, reply link, then $0.25 USDG on Ethereum or Robinhood Chain.</p>
+  </div>
+</section>
+<section class="panel">
+  <button class="btn" id="connectBtn" type="button">CONNECT WALLET</button>
+  <div id="walletPick" class="pick"></div>
+  <p id="walletLine" class="muted"></p>
+  <label>X username</label><input id="xUser" placeholder="VeyroHood">
+  <label>Discord username</label><input id="discordUser" placeholder="name">
+  <label>Quote link</label><input id="quoteLink" placeholder="https://x.com/...">
+  <label>Reply link</label><input id="replyLink" placeholder="https://x.com/...">
+  <label>Referral code</label><input id="referralCode" placeholder="optional">
+  <label>Network</label>
+  <select id="chain"><option value="4663">Robinhood Chain</option><option value="1">Ethereum</option></select>
+  <div class="actions" style="margin-top:14px">
+    <button class="btn" id="saveBtn" type="button">SAVE DETAILS</button>
+    <button class="btn ghost" id="payBtn" type="button">PAY $0.25 USDG</button>
+  </div>
+  <label>Already paid? Transaction hash</label><input id="txHash" placeholder="0x...">
+  <button class="btn ghost" id="recheckBtn" type="button">RECHECK</button>
+  <p id="status" class="muted"></p>
+</section>
+<footer><span>Treasury 0xf6F80827cBAf83798c7763FCd915C0068F2bE60C</span><span>USDG</span></footer>
+</div>
+<script src="gate.js"></script>
+<script src="wallet.js"></script>
+<script>
+const status=document.getElementById("status");
+const savedRef=(new URLSearchParams(location.search).get("ref")||vhSavedRef()||"").trim();
+if(savedRef) document.getElementById("referralCode").value=savedRef;
+document.getElementById("connectBtn").onclick=()=>connectFlow("walletPick",(w,name)=>{
+  document.getElementById("walletLine").textContent=w.slice(0,6)+"..."+w.slice(-4)+" · "+name;
+},msg=>status.textContent=msg);
+async function saveDetails(){
+  if(!window.VH.wallet){status.textContent="Connect wallet first.";return;}
+  const body={wallet_address:window.VH.wallet,x_username:document.getElementById("xUser").value,discord_username:document.getElementById("discordUser").value,quote_link:document.getElementById("quoteLink").value,reply_link:document.getElementById("replyLink").value,referral_code:document.getElementById("referralCode").value};
+  const data=await (await fetch(API_URL+"/api/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})).json();
+  status.textContent=data.error||data.message||"Saved";
+  return data;
+}
+document.getElementById("saveBtn").onclick=saveDetails;
+async function check(tx){
+  const data=await (await fetch(API_URL+"/api/verify-payment",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({wallet:window.VH.wallet,txHash:tx,chainId:Number(document.getElementById("chain").value)})})).json();
+  status.textContent=data.error||data.message||(data.success?"Verified":"Check failed");
+  if(data.success){vhMarkVerified(); setTimeout(()=>location.href="dashboard.html",800);} 
+}
+document.getElementById("payBtn").onclick=async()=>{
+  const saved=await saveDetails();
+  if(saved&&saved.error) return;
+  try{
+    const tx=await payUsdg(Number(document.getElementById("chain").value));
+    document.getElementById("txHash").value=tx;
+    status.textContent="Payment sent. Checking...";
+    await check(tx);
+  }catch(e){status.textContent=e.message||"Payment cancelled";}
+};
+document.getElementById("recheckBtn").onclick=()=>check(document.getElementById("txHash").value.trim());
+</script>
+</body>
+</html>
