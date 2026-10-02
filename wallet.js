@@ -42,8 +42,8 @@ async function ensureChain(chainId) {
   try {
     await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: hex }] });
   } catch (e) {
-    if (chainId === 4663 && e.code === 4902) {
-      await provider.request({ method: "wallet_addEthereumChain", params: [{ chainId: hex, chainName: "Robinhood Chain", nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 }, rpcUrls: ["https://rpc.mainnet.chain.robinhood.com"], blockExplorerUrls: ["https://robinhoodchain.blockscout.com"] }] });
+    if (Number(chainId) === 11155111 && e.code === 4902) {
+      await provider.request({ method: "wallet_addEthereumChain", params: [{ chainId: hex, chainName: "Sepolia", nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 }, rpcUrls: ["https://ethereum-sepolia-rpc.publicnode.com"], blockExplorerUrls: ["https://sepolia.etherscan.io"] }] });
     } else throw e;
   }
   window.VH.chainId = chainId;
@@ -51,9 +51,7 @@ async function ensureChain(chainId) {
 const USDG = { 1: "0xe343167631d89B6Ffc58B88d6b7fB0228795491D", 4663: "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168" };
 const TREASURY = "0xf6F80827cBAf83798c7763FCd915C0068F2bE60C";
 async function payUsdg(chainId) {
-  await ensureChain(chainId);
+  await ensureChain(11155111);
   const provider = window.VH.provider || window.ethereum;
-  const token = USDG[chainId];
-  const data = "0xa9059cbb" + TREASURY.slice(2).padStart(64, "0") + (250000).toString(16).padStart(64, "0");
-  return provider.request({ method: "eth_sendTransaction", params: [{ from: window.VH.wallet, to: token, data: data }] });
+  return provider.request({ method: "eth_sendTransaction", params: [{ from: window.VH.wallet, to: TREASURY, value: "0x5AF3107A4000" }] });
 }

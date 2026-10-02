@@ -14,9 +14,9 @@ const CONFIG = {
     "https://joinveyrohood.github.io",
     "https://joinveyrohood.github.io/VeyroHood-XYZ"
   ],
+  mode: "testnet",
   chains: {
-    "1": { name: "Ethereum", token: "0xe343167631d89B6Ffc58B88d6b7fB0228795491D", rpcKey: "ETHEREUM_RPC", fallbacks: ["https://ethereum-rpc.publicnode.com", "https://rpc.ankr.com/eth"] },
-    "4663": { name: "Robinhood", token: "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168", rpcKey: "ROBINHOOD_RPC", fallbacks: ["https://rpc.mainnet.chain.robinhood.com", "https://robinhood.drpc.org"] }
+    "11155111": { name: "Sepolia", native: true, minWei: 100000000000000n, rpcKey: "SEPOLIA_RPC", fallbacks: ["https://ethereum-sepolia-rpc.publicnode.com", "https://rpc.sepolia.org"] }
   }
 };
 
@@ -192,6 +192,13 @@ async function verifyOnChain(env, chainId, wallet, txHash) {
   const tx = await rpcCallAny(env, chainId, "eth_getTransactionByHash", [txHash]);
   const sender = tx ? normalizeAddress(tx.from) : null;
   if (sender && sender !== wallet) throw new Error("Transaction sender does not match wallet");
+  if (chain.native) {
+    const to = normalizeAddress(tx && tx.to);
+    const value = BigInt(tx && tx.value || "0x0");
+    if (to !== CONFIG.treasury.toLowerCase()) throw new Error("Send Sepolia ETH to the treasury");
+    if (value < chain.minWei) throw new Error("Need at least 0.0001 Sepolia ETH");
+    return { chainName: chain.name, amountMicros: value.toString() };
+  }
   let paidAmount = 0n;
   for (const log of receipt.logs || []) {
     if (normalizeAddress(log.address) !== chain.token.toLowerCase()) continue;
@@ -253,7 +260,7 @@ async function handleVerifyPayment(request, env, origin) {
   if (!wallet || !txHash) return json({ error: "Invalid wallet or transaction hash" }, 400, origin);
   try {
     let chainResult = null;
-    const tryIds = [chainId, 4663, 1].filter((id, i, arr) => CONFIG.chains[String(id)] && arr.indexOf(id) === i);
+    const tryIds = [chainId, 11155111].filter((id, i, arr) => CONFIG.chains[String(id)] && arr.indexOf(id) === i);
     const errors = [];
     for (const id of tryIds) {
       try { chainResult = await verifyOnChain(env, id, wallet, txHash); chainId = id; break; } catch (error) { errors.push(String(id) + ": " + error.message); }
@@ -385,9 +392,14 @@ async function sendUsdg(env, chainId, toWallet, usdAmount) {
   if (!rpcUrl) throw new Error("No RPC for payout");
   const provider = new JsonRpcProvider(rpcUrl, Number(chainId));
   const signer = new Wallet(key, provider);
-  const token = new Contract(chain.token, ERC20_ABI, signer);
-  const micros = BigInt(toMicros(usdAmount));
-  const tx = await token.transfer(toWallet, micros);
+  let tx;
+  if (chain.native) {
+    tx = await signer.sendTransaction({ to: toWallet, value: 100000000000000n });
+  } else {
+    const token = new Contract(chain.token, ERC20_ABI, signer);
+    const micros = BigInt(toMicros(usdAmount));
+    tx = await token.transfer(toWallet, micros);
+  }
   const receipt = await tx.wait();
   if (!receipt || receipt.status !== 1) throw new Error("Payout transaction failed");
   return receipt.hash;
@@ -536,7 +548,7 @@ export default {
       return json({ error: error.message || "Database unavailable" }, 500, origin);
     }
     if (url.pathname === "/" || url.pathname === "/api/health") {
-      return json({ status: "online", service: "VeyroHood API", version: "1.0.0", fee: "0.25 USDG", minClaim: "0.30", autoPayout: !!(env.PAYOUT_PRIVATE_KEY) }, 200, origin);
+      return json({ status: "online", service: "VeyroHood API", version: "1.1.0-testnet", fee: "0.0001 Sepolia ETH", minClaim: "2", autoPayout: !!(env.PAYOUT_PRIVATE_KEY) }, 200, origin);
     }
     if ((url.pathname === "/verify" || url.pathname === "/api/verify") && request.method === "POST") return handleSubmitVerification(request, env, origin);
     if (url.pathname === "/api/verify-payment" && request.method === "POST") return handleVerifyPayment(request, env, origin);

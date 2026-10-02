@@ -39,7 +39,7 @@
   </div>
 </section>
 <p class="warn" id="note">Finish the current mission.</p>
-<div class="actions"><a class="btn" id="goVerify" href="#">VERIFY $0.25 LOCKED</a></div>
+<div class="actions"><a class="btn" id="goVerify" href="#">VERIFY 0.0001 ETH test LOCKED</a></div>
 <footer><span>VeyroHood XYZ</span><span>Missions</span></footer>
 </div>
 <script src="gate.js"></script>
@@ -58,9 +58,9 @@ function render(){
   document.getElementById("progressFill").style.width=(n/4*100)+"%";
   if(!step){
     document.getElementById("stepTitle").textContent="ALL COMPLETE";
-    document.getElementById("stepText").textContent="Next: pay $0.25 USDG.";
+    document.getElementById("stepText").textContent="Next: pay 0.0001 Sepolia ETH.";
     openTask.style.display=completeTask.style.display="none";
-    go.href="verify.html"; go.textContent="VERIFY $0.25 USDG";
+    go.href="verify.html"; go.textContent="VERIFY 0.0001 Sepolia ETH";
     note.textContent="Missions done."; note.className="ok";
   }else{
     document.getElementById("stepTitle").textContent=step.title;
@@ -68,7 +68,7 @@ function render(){
     openTask.style.display=completeTask.style.display="";
     openTask.href=step.href; openTask.textContent=o[step.key]?"OPENED":step.open;
     completeTask.disabled=!o[step.key];
-    go.href="#"; go.textContent="VERIFY $0.25 LOCKED";
+    go.href="#"; go.textContent="VERIFY 0.0001 ETH test LOCKED";
     note.textContent="Next mission stays hidden until Complete."; note.className="warn";
   }
 }
