@@ -28,8 +28,9 @@
 </section>
 <section class="panel">
   <button class="btn" id="connectBtn" type="button">CONNECT WALLET</button>
-  <a class="btn ghost" id="mmBtn" href="https://metamask.app.link/dapp/joinveyrohood.github.io/VeyroHood-XYZ/verify.html">OPEN IN METAMASK</a>
   <div id="walletPick" class="pick"></div>
+  <p class="muted">Phone: open this page in your wallet app.</p>
+  <div id="walletApps" class="pick"></div>
   <p id="walletLine" class="muted"></p>
   <label>X username</label><input id="xUser" placeholder="VeyroHood">
   <label>Discord username</label><input id="discordUser" placeholder="name">
@@ -54,7 +55,7 @@
 const status=document.getElementById("status");
 const savedRef=(new URLSearchParams(location.search).get("ref")||vhSavedRef()||"").trim();
 if(savedRef) document.getElementById("referralCode").value=savedRef;
-if(!window.ethereum) status.textContent="Open this page inside MetaMask, then pay.";
+renderWalletApps("walletApps");
 document.getElementById("connectBtn").onclick=()=>connectFlow("walletPick",(w,name)=>{
   document.getElementById("walletLine").textContent=w.slice(0,6)+"..."+w.slice(-4)+" · "+name;
 },msg=>status.textContent=msg);
@@ -93,7 +94,6 @@ async function check(tx){
   }
 }
 document.getElementById("payBtn").onclick=async()=>{
-  if(!window.ethereum){status.textContent="Open this page inside MetaMask, then pay.";return;}
   if(!window.VH.wallet){status.textContent="Connect wallet first, then Pay.";return;}
   status.textContent="Opening wallet...";
   try{
