@@ -23,11 +23,12 @@
   <div>
     <div class="kicker">0.0001 Sepolia ETH</div>
     <h1>LOCK YOUR <i>SEAT.</i></h1>
-    <p class="lead">X username, Discord, quote link, reply link, then 0.0001 Sepolia ETH on Ethereum or Robinhood Chain.</p>
+    <p class="lead">X username, Discord, quote link, reply link, then 0.0001 Sepolia ETH. Phone: open this page inside MetaMask.</p>
   </div>
 </section>
 <section class="panel">
   <button class="btn" id="connectBtn" type="button">CONNECT WALLET</button>
+  <a class="btn ghost" id="mmBtn" href="https://metamask.app.link/dapp/joinveyrohood.github.io/VeyroHood-XYZ/verify.html">OPEN IN METAMASK</a>
   <div id="walletPick" class="pick"></div>
   <p id="walletLine" class="muted"></p>
   <label>X username</label><input id="xUser" placeholder="VeyroHood">
@@ -45,7 +46,7 @@
   <button class="btn ghost" id="recheckBtn" type="button">RECHECK</button>
   <p id="status" class="muted"></p>
 </section>
-<footer><span>Treasury 0xf6F80827cBAf83798c7763FCd915C0068F2bE60C</span><span>USDG</span></footer>
+<footer><span>Treasury 0xf6F80827cBAf83798c7763FCd915C0068F2bE60C</span><span>Sepolia test</span></footer>
 </div>
 <script src="gate.js"></script>
 <script src="wallet.js"></script>
@@ -53,6 +54,7 @@
 const status=document.getElementById("status");
 const savedRef=(new URLSearchParams(location.search).get("ref")||vhSavedRef()||"").trim();
 if(savedRef) document.getElementById("referralCode").value=savedRef;
+if(!window.ethereum) status.textContent="This browser has no wallet. Tap Open in MetaMask, then pay.";
 document.getElementById("connectBtn").onclick=()=>connectFlow("walletPick",(w,name)=>{
   document.getElementById("walletLine").textContent=w.slice(0,6)+"..."+w.slice(-4)+" · "+name;
 },msg=>status.textContent=msg);
@@ -64,21 +66,43 @@ async function saveDetails(){
   return data;
 }
 document.getElementById("saveBtn").onclick=saveDetails;
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 async function check(tx){
-  const data=await (await fetch(API_URL+"/api/verify-payment",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({wallet:window.VH.wallet,txHash:tx,chainId:Number(document.getElementById("chain").value)})})).json();
-  status.textContent=data.error||data.message||(data.success?"Verified":"Check failed");
-  if(data.success){vhMarkVerified(); setTimeout(()=>location.href="dashboard.html",800);} 
+  for(let i=0;i<8;i++){
+    const data=await (await fetch(API_URL+"/api/verify-payment",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({wallet:window.VH.wallet,txHash:tx,chainId:11155111})})).json();
+    const msg=data.error||data.message||(data.success?"Verified":"Check failed");
+    if(data.success && data.paymentVerified){
+      status.textContent="Paid. Seat locked.";
+      vhMarkVerified();
+      setTimeout(()=>location.href="dashboard.html",800);
+      return data;
+    }
+    if(data.success && data.ogNumber){
+      status.textContent="Already verified.";
+      vhMarkVerified();
+      setTimeout(()=>location.href="dashboard.html",800);
+      return data;
+    }
+    if(/not found|TX_PENDING|Wait and tap/i.test(msg) && i<7){
+      status.textContent="Tx sent. Waiting for Sepolia... "+(i+1)+"/8";
+      await sleep(4000);
+      continue;
+    }
+    status.textContent=msg;
+    return data;
+  }
 }
 document.getElementById("payBtn").onclick=async()=>{
-  if(!window.VH.wallet){status.textContent="Connect wallet first.";return;}
-  status.textContent="Opening wallet...";
+  if(!window.ethereum){status.textContent="Open this page inside MetaMask, then tap Pay.";return;}
+  if(!window.VH.wallet){status.textContent="Connect wallet first, then Pay.";return;}
+  status.textContent="Switching to Sepolia and opening wallet...";
   try{
-    const tx=await payUsdg(11155111);
+    const tx=await payUsdg();
     document.getElementById("txHash").value=tx;
-    status.textContent="Wallet sent "+tx+". Saving...";
+    status.textContent="Wallet sent "+tx+". Checking...";
     await saveDetails();
     await check(tx);
-  }catch(e){status.textContent=e.message||"Wallet did not open. Switch MetaMask to Sepolia and try again.";}
+  }catch(e){status.textContent=e.message||"Wallet did not open. Switch to Sepolia and try again.";}
 };
 document.getElementById("recheckBtn").onclick=()=>check(document.getElementById("txHash").value.trim());
 </script>
