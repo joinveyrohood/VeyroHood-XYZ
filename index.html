@@ -23,7 +23,7 @@
   <div>
     <div class="kicker">10,000 NFT WHITELIST</div>
     <h1>EARN YOUR <i>HOOD.</i></h1>
-    <p class="lead">One mission at a time. Then verify with 0.0001 Sepolia ETH. First 1,000 paid wallets are OG. Next 9,000 are FCFS.</p>
+    <p class="lead">One mission at a time. First 1,000 are OG. Next 9,000 are FCFS.</p>
     <div class="actions"><button class="btn" type="button" onclick="vhGoMissions()">START MISSION</button></div>
   </div>
   <img class="sprite" src="character.jpg" alt="VeyroHood pixel character">
@@ -36,10 +36,10 @@
 </section>
 <section class="panel">
   <h2>REFERRAL BOARD</h2>
-  <p class="muted">Live. Code masked. 20% of 0.0001 ETH test = $0.05 per paid referral.</p>
+  <p class="muted">Live. 20%.</p>
   <div id="board">Loading...</div>
 </section>
-<footer><span>VeyroHood XYZ</span><span>0.0001 Sepolia ETH · min withdraw $2</span></footer>
+<footer><span>VeyroHood XYZ</span><span>10,000 seats</span></footer>
 </div>
 <script src="gate.js"></script>
 <script>
@@ -51,7 +51,7 @@ async function load(){
   document.getElementById("ogLeft").textContent=data.ogLeft??1000;
   document.getElementById("wl").textContent=data.wl??0;
   const rows=data.leaderboard||[];
-  document.getElementById("board").innerHTML=rows.length?rows.map((r,i)=> (i+1)+". "+mask(r.referral_code)+" · "+(r.referred_count||0)+" refs · $"+Number(r.total_earned||0).toFixed(2)).join("<br>"):"No referrals yet.";
+  document.getElementById("board").innerHTML=rows.length?rows.map((r,i)=> (i+1)+". "+mask(r.referral_code)+" · "+(r.referred_count||0)+" refs").join("<br>"):"No referrals yet.";
 }
 load(); setInterval(load,15000);
 </script>

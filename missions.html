@@ -23,7 +23,6 @@
   <div>
     <div class="kicker">ONE AT A TIME</div>
     <h1>COMPLETE THIS. <i>NEXT OPENS.</i></h1>
-    <p class="lead">Follow X, join Discord, quote the pinned post, reply. Opening a tab is not enough.</p>
   </div>
 </section>
 <section class="panel">
@@ -39,13 +38,13 @@
   </div>
 </section>
 <p class="warn" id="note">Finish the current mission.</p>
-<div class="actions"><a class="btn" id="goVerify" href="#">VERIFY 0.0001 ETH test LOCKED</a></div>
+<div class="actions"><a class="btn" id="goVerify" href="#">VERIFY LOCKED</a></div>
 <footer><span>VeyroHood XYZ</span><span>Missions</span></footer>
 </div>
 <script src="gate.js"></script>
 <script>
 const STEPS=[
-  {key:"follow",title:"01 / FOLLOW X",text:"Follow @VeyroHood on X, then press Complete.",open:"OPEN X",href:"https://x.com/VeyroHood"},
+  {key:"follow",title:"01 / FOLLOW X",text:"Follow @VeyroHood, then press Complete.",open:"OPEN X",href:"https://x.com/VeyroHood"},
   {key:"discord",title:"02 / DISCORD",text:"Join Discord, then press Complete.",open:"OPEN DISCORD",href:"https://discord.gg/6CYd3ewU5"},
   {key:"quote",title:"03 / QUOTE",text:"Quote the pinned post, then press Complete.",open:"OPEN QUOTE",href:"https://x.com/VeyroHood/status/2095434542094115048"},
   {key:"reply",title:"04 / REPLY",text:"Reply on the pinned post, then press Complete.",open:"OPEN REPLY",href:"https://x.com/VeyroHood/status/2095434542094115048"}
@@ -58,9 +57,9 @@ function render(){
   document.getElementById("progressFill").style.width=(n/4*100)+"%";
   if(!step){
     document.getElementById("stepTitle").textContent="ALL COMPLETE";
-    document.getElementById("stepText").textContent="Next: pay 0.0001 Sepolia ETH.";
+    document.getElementById("stepText").textContent="Next: verify.";
     openTask.style.display=completeTask.style.display="none";
-    go.href="verify.html"; go.textContent="VERIFY 0.0001 Sepolia ETH";
+    go.href="verify.html"; go.textContent="VERIFY";
     note.textContent="Missions done."; note.className="ok";
   }else{
     document.getElementById("stepTitle").textContent=step.title;
@@ -68,8 +67,8 @@ function render(){
     openTask.style.display=completeTask.style.display="";
     openTask.href=step.href; openTask.textContent=o[step.key]?"OPENED":step.open;
     completeTask.disabled=!o[step.key];
-    go.href="#"; go.textContent="VERIFY 0.0001 ETH test LOCKED";
-    note.textContent="Next mission stays hidden until Complete."; note.className="warn";
+    go.href="#"; go.textContent="VERIFY LOCKED";
+    note.textContent="Next stays hidden until Complete."; note.className="warn";
   }
 }
 openTask.onclick=()=>{const s=current(); if(s){vhMarkOpened(s.key); render();}};

@@ -21,9 +21,9 @@
 </nav>
 <section class="hero" style="grid-template-columns:1fr">
   <div>
-    <div class="kicker">0.0001 Sepolia ETH</div>
+    <div class="kicker">VERIFY</div>
     <h1>LOCK YOUR <i>SEAT.</i></h1>
-    <p class="lead">X username, Discord, quote link, reply link, then 0.0001 Sepolia ETH. Phone: open this page inside MetaMask.</p>
+    <p class="lead">One wallet. One seat.</p>
   </div>
 </section>
 <section class="panel">
@@ -40,13 +40,13 @@
   <select id="chain"><option value="11155111">Sepolia testnet</option></select>
   <div class="actions" style="margin-top:14px">
     <button class="btn" id="saveBtn" type="button">SAVE DETAILS</button>
-    <button class="btn ghost" id="payBtn" type="button">PAY 0.0001 Sepolia ETH</button>
+    <button class="btn ghost" id="payBtn" type="button">PAY</button>
   </div>
   <label>Already paid? Transaction hash</label><input id="txHash" placeholder="0x...">
   <button class="btn ghost" id="recheckBtn" type="button">RECHECK</button>
   <p id="status" class="muted"></p>
 </section>
-<footer><span>Treasury 0xf6F80827cBAf83798c7763FCd915C0068F2bE60C</span><span>Sepolia test</span></footer>
+<footer><span>VeyroHood XYZ</span><span>20%</span></footer>
 </div>
 <script src="gate.js"></script>
 <script src="wallet.js"></script>
@@ -54,7 +54,7 @@
 const status=document.getElementById("status");
 const savedRef=(new URLSearchParams(location.search).get("ref")||vhSavedRef()||"").trim();
 if(savedRef) document.getElementById("referralCode").value=savedRef;
-if(!window.ethereum) status.textContent="This browser has no wallet. Tap Open in MetaMask, then pay.";
+if(!window.ethereum) status.textContent="Open this page inside MetaMask, then pay.";
 document.getElementById("connectBtn").onclick=()=>connectFlow("walletPick",(w,name)=>{
   document.getElementById("walletLine").textContent=w.slice(0,6)+"..."+w.slice(-4)+" · "+name;
 },msg=>status.textContent=msg);
@@ -62,7 +62,7 @@ async function saveDetails(){
   if(!window.VH.wallet){status.textContent="Connect wallet first.";return;}
   const body={wallet_address:window.VH.wallet,x_username:document.getElementById("xUser").value,discord_username:document.getElementById("discordUser").value,quote_link:document.getElementById("quoteLink").value,reply_link:document.getElementById("replyLink").value,referral_code:document.getElementById("referralCode").value};
   const data=await (await fetch(API_URL+"/api/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})).json();
-  status.textContent=data.error||data.message||"Saved";
+  status.textContent=data.error||"Saved";
   return data;
 }
 document.getElementById("saveBtn").onclick=saveDetails;
@@ -72,7 +72,7 @@ async function check(tx){
     const data=await (await fetch(API_URL+"/api/verify-payment",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({wallet:window.VH.wallet,txHash:tx,chainId:11155111})})).json();
     const msg=data.error||data.message||(data.success?"Verified":"Check failed");
     if(data.success && data.paymentVerified){
-      status.textContent="Paid. Seat locked.";
+      status.textContent="Seat locked.";
       vhMarkVerified();
       setTimeout(()=>location.href="dashboard.html",800);
       return data;
@@ -84,7 +84,7 @@ async function check(tx){
       return data;
     }
     if(/not found|TX_PENDING|Wait and tap/i.test(msg) && i<7){
-      status.textContent="Tx sent. Waiting for Sepolia... "+(i+1)+"/8";
+      status.textContent="Waiting... "+(i+1)+"/8";
       await sleep(4000);
       continue;
     }
@@ -93,16 +93,16 @@ async function check(tx){
   }
 }
 document.getElementById("payBtn").onclick=async()=>{
-  if(!window.ethereum){status.textContent="Open this page inside MetaMask, then tap Pay.";return;}
+  if(!window.ethereum){status.textContent="Open this page inside MetaMask, then pay.";return;}
   if(!window.VH.wallet){status.textContent="Connect wallet first, then Pay.";return;}
-  status.textContent="Switching to Sepolia and opening wallet...";
+  status.textContent="Opening wallet...";
   try{
     const tx=await payUsdg();
     document.getElementById("txHash").value=tx;
-    status.textContent="Wallet sent "+tx+". Checking...";
+    status.textContent="Checking...";
     await saveDetails();
     await check(tx);
-  }catch(e){status.textContent=e.message||"Wallet did not open. Switch to Sepolia and try again.";}
+  }catch(e){status.textContent=e.message||"Wallet did not open.";}
 };
 document.getElementById("recheckBtn").onclick=()=>check(document.getElementById("txHash").value.trim());
 </script>

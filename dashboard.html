@@ -32,17 +32,17 @@
   <div class="card stat">Available<b id="avail">$0.00</b></div>
 </section>
 <section class="grid2">
-  <div class="card"><h2>EARNED</h2><p>Lifetime <span id="earned">$0.00</span><br>Withdrawn <span id="withdrawn">$0.00</span><br>Each paid ref = $0.05</p></div>
+  <div class="card"><h2>EARNED</h2><p>Lifetime <span id="earned">$0.00</span><br>Withdrawn <span id="withdrawn">$0.00</span><br>Referral 20%</p></div>
   <div class="card"><h2>YOUR LINK</h2><input id="refLink" class="copy-row" readonly value="Connect wallet"><div class="actions" style="margin-top:12px"><button class="btn" id="copyBtn" type="button" disabled>COPY LINK</button></div></div>
 </section>
 <section class="panel">
   <h2>WITHDRAW</h2>
-  <p class="muted">Minimum $2. Extra balance withdraws with it. Auto-sends USDG to this wallet.</p>
+  <p class="muted">Opens at $2.</p>
   <select id="claimChain"><option value="11155111">Sepolia testnet</option></select>
   <div class="actions" style="margin-top:12px"><button class="btn" id="claimBtn" type="button" disabled>WITHDRAW</button></div>
 </section>
 <section class="panel"><h2>YOUR CLAIMS</h2><div id="claims" class="muted">No claims yet.</div></section>
-<footer><span>VeyroHood XYZ</span><span>Verified only</span></footer>
+<footer><span>VeyroHood XYZ</span><span>20%</span></footer>
 </div>
 <script src="gate.js"></script>
 <script src="wallet.js"></script>
@@ -63,12 +63,12 @@ async function loadMe(){
   document.getElementById("refLink").value=lastLink||"No link yet";
   document.getElementById("copyBtn").disabled=!lastLink;
   document.getElementById("claimBtn").disabled=!data.canClaim;
-  document.getElementById("status").textContent=data.message||"";
+  document.getElementById("status").textContent=data.paymentVerified?(data.ogNumber?"OG":"WL"):"";
 }
 async function loadClaims(){
   const data=await (await fetch(API_URL+"/api/claims?wallet="+window.VH.wallet)).json();
   const rows=data.claims||[];
-  document.getElementById("claims").innerHTML=rows.length?rows.map(c=>"#"+c.id+" · "+money(c.amount)+" · "+c.status+(c.payout_tx?" · "+c.payout_tx:"")).join("<br>"):"No claims yet.";
+  document.getElementById("claims").innerHTML=rows.length?rows.map(c=>"#"+c.id+" · "+money(c.amount)+" · "+c.status).join("<br>"):"No claims yet.";
 }
 document.getElementById("copyBtn").onclick=async()=>{
   const box=document.getElementById("refLink");
@@ -76,11 +76,11 @@ document.getElementById("copyBtn").onclick=async()=>{
   let ok=false;
   try{await navigator.clipboard.writeText(lastLink); ok=true;}catch(e){}
   if(!ok){try{ok=document.execCommand("copy");}catch(e){}}
-  document.getElementById("status").textContent=ok?"Referral link copied.":"Selected. Press copy.";
+  document.getElementById("status").textContent=ok?"Copied.":"Selected. Press copy.";
 };
 document.getElementById("claimBtn").onclick=async()=>{
   const data=await (await fetch(API_URL+"/api/claim",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({wallet:window.VH.wallet,chainId:Number(document.getElementById("claimChain").value)})})).json();
-  document.getElementById("status").textContent=data.error||data.message||"Submitted";
+  document.getElementById("status").textContent=data.error||"Submitted";
   loadMe(); loadClaims();
 };
 </script>
