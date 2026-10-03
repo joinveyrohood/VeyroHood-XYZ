@@ -109,5 +109,5 @@ async function payUsdg() {
   const provider = window.VH.provider || window.ethereum;
   const from = window.VH.wallet;
   if (!from) throw new Error("Connect wallet first.");
-  return provider.request({ method: "eth_sendTransaction", params: [{ from: from, to: TREASURY, value: "0x5af3107a4000" }] });
+  return provider.request({ method: "eth_sendTransaction", params: [{ from: from, to: TREASURY, value: "0x11c37937e08000" }] });
 }
